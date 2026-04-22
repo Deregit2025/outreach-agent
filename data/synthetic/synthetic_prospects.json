@@ -1,0 +1,328 @@
+[
+  {
+    "prospect_id": "syn001",
+    "company_name": "Verdant Labs",
+    "website": "https://verdantlabs.io",
+    "industries": ["SaaS", "Enterprise Software"],
+    "country_code": "US",
+    "region": "California",
+    "employee_count_raw": "51-100",
+    "employee_count_min": 51,
+    "employee_count_max": 100,
+    "description": "Verdant Labs builds supply-chain visibility software for mid-market manufacturers.",
+    "contact_first_name": "Priya",
+    "contact_last_name": "Sharma",
+    "contact_email": "psharma@verdantlabs.io",
+    "contact_title": "CTO",
+    "contact_phone": "+14155550101",
+    "funding_rounds": [
+      {
+        "announced_on": "2026-01-15",
+        "title": "Series A",
+        "uuid": "fr-syn001-a",
+        "amount_usd": 12000000.0,
+        "series": "A"
+      }
+    ],
+    "leadership_hires": [],
+    "layoff_events": [],
+    "tech_stack": [
+      {"name": "Python", "technology_category": ["Language"]},
+      {"name": "PostgreSQL", "technology_category": ["Database"]},
+      {"name": "Kubernetes", "technology_category": ["Infrastructure"]}
+    ],
+    "icp_segment": 1,
+    "icp_confidence": "high",
+    "ai_maturity_score": 1,
+    "ai_maturity_confidence": "medium",
+    "thread_status": "new",
+    "channel": "email"
+  },
+  {
+    "prospect_id": "syn002",
+    "company_name": "Cornerstone Platforms",
+    "website": "https://cornerstoneplatforms.com",
+    "industries": ["Fintech", "Payments"],
+    "country_code": "US",
+    "region": "New York",
+    "employee_count_raw": "201-500",
+    "employee_count_min": 201,
+    "employee_count_max": 500,
+    "description": "B2B payments infrastructure for mid-market financial services firms.",
+    "contact_first_name": "Marcus",
+    "contact_last_name": "Osei",
+    "contact_email": "marcus.osei@cornerstoneplatforms.com",
+    "contact_title": "VP Engineering",
+    "contact_phone": "+12125550202",
+    "funding_rounds": [
+      {
+        "announced_on": "2024-11-05",
+        "title": "Series B",
+        "uuid": "fr-syn002-b",
+        "amount_usd": 28000000.0,
+        "series": "B"
+      }
+    ],
+    "leadership_hires": [],
+    "layoff_events": [
+      {
+        "key_event_date": "2025-09-20",
+        "label": "Engineering headcount reduction — 15% of team",
+        "link": null,
+        "uuid": "le-syn002"
+      }
+    ],
+    "tech_stack": [
+      {"name": "Go", "technology_category": ["Language"]},
+      {"name": "Kafka", "technology_category": ["Messaging"]},
+      {"name": "AWS", "technology_category": ["Cloud"]}
+    ],
+    "icp_segment": 2,
+    "icp_confidence": "high",
+    "ai_maturity_score": 0,
+    "ai_maturity_confidence": "low",
+    "thread_status": "new",
+    "channel": "email"
+  },
+  {
+    "prospect_id": "syn003",
+    "company_name": "Ironwood Digital",
+    "website": "https://ironwooddigital.com",
+    "industries": ["eCommerce", "Retail Tech"],
+    "country_code": "US",
+    "region": "Illinois",
+    "employee_count_raw": "101-200",
+    "employee_count_min": 101,
+    "employee_count_max": 200,
+    "description": "Ironwood builds conversion-rate optimisation tools for mid-market e-commerce brands.",
+    "contact_first_name": "Sofia",
+    "contact_last_name": "Muñoz",
+    "contact_email": "sofia.munoz@ironwooddigital.com",
+    "contact_title": "CTO",
+    "contact_phone": "+13125550303",
+    "funding_rounds": [],
+    "leadership_hires": [
+      {
+        "key_event_date": "2026-02-10",
+        "label": "New CTO hired: Sofia Muñoz (ex-Shopify)",
+        "link": null,
+        "uuid": "lh-syn003"
+      }
+    ],
+    "layoff_events": [],
+    "tech_stack": [
+      {"name": "Python", "technology_category": ["Language"]},
+      {"name": "React", "technology_category": ["Frontend"]},
+      {"name": "dbt", "technology_category": ["Data"]}
+    ],
+    "icp_segment": 3,
+    "icp_confidence": "high",
+    "ai_maturity_score": 1,
+    "ai_maturity_confidence": "medium",
+    "thread_status": "new",
+    "channel": "email"
+  },
+  {
+    "prospect_id": "syn004",
+    "company_name": "Luminate AI",
+    "website": "https://luminate.ai",
+    "industries": ["AI / ML", "SaaS"],
+    "country_code": "US",
+    "region": "Texas",
+    "employee_count_raw": "51-100",
+    "employee_count_min": 51,
+    "employee_count_max": 100,
+    "description": "Luminate builds document intelligence pipelines using LLMs for legal and compliance workflows.",
+    "contact_first_name": "Tariq",
+    "contact_last_name": "Belkacem",
+    "contact_email": "tariq.b@luminate.ai",
+    "contact_title": "Head of Engineering",
+    "contact_phone": "+15125550404",
+    "funding_rounds": [
+      {
+        "announced_on": "2025-10-01",
+        "title": "Seed",
+        "uuid": "fr-syn004-s",
+        "amount_usd": 3500000.0,
+        "series": "Seed"
+      }
+    ],
+    "leadership_hires": [],
+    "layoff_events": [],
+    "tech_stack": [
+      {"name": "Python", "technology_category": ["Language"]},
+      {"name": "Hugging Face", "technology_category": ["ML"]},
+      {"name": "MLflow", "technology_category": ["ML Ops"]},
+      {"name": "Pinecone", "technology_category": ["Vector DB"]}
+    ],
+    "icp_segment": 4,
+    "icp_confidence": "high",
+    "ai_maturity_score": 3,
+    "ai_maturity_confidence": "high",
+    "thread_status": "new",
+    "channel": "email"
+  },
+  {
+    "prospect_id": "syn005",
+    "company_name": "Bastion Healthcare Tech",
+    "website": "https://bastionehealth.com",
+    "industries": ["HealthTech", "SaaS"],
+    "country_code": "US",
+    "region": "Massachusetts",
+    "employee_count_raw": "201-500",
+    "employee_count_min": 201,
+    "employee_count_max": 500,
+    "description": "Clinical workflow automation for hospital systems and outpatient clinics.",
+    "contact_first_name": "Amara",
+    "contact_last_name": "Nkosi",
+    "contact_email": "amara.nkosi@bastionehealth.com",
+    "contact_title": "VP of Product Engineering",
+    "contact_phone": "+16175550505",
+    "funding_rounds": [
+      {
+        "announced_on": "2025-06-20",
+        "title": "Series B",
+        "uuid": "fr-syn005-b",
+        "amount_usd": 40000000.0,
+        "series": "B"
+      }
+    ],
+    "leadership_hires": [],
+    "layoff_events": [],
+    "tech_stack": [
+      {"name": "Python", "technology_category": ["Language"]},
+      {"name": "Snowflake", "technology_category": ["Data Warehouse"]},
+      {"name": "dbt", "technology_category": ["Data"]},
+      {"name": "AWS SageMaker", "technology_category": ["ML"]}
+    ],
+    "icp_segment": 1,
+    "icp_confidence": "medium",
+    "ai_maturity_score": 2,
+    "ai_maturity_confidence": "medium",
+    "thread_status": "new",
+    "channel": "email"
+  },
+  {
+    "prospect_id": "syn006",
+    "company_name": "Stormgate Analytics",
+    "website": "https://stormgateanalytics.io",
+    "industries": ["Data Analytics", "MarTech"],
+    "country_code": "GB",
+    "region": "London",
+    "employee_count_raw": "51-100",
+    "employee_count_min": 51,
+    "employee_count_max": 100,
+    "description": "Real-time customer behaviour analytics for D2C brands across Europe.",
+    "contact_first_name": "Elspeth",
+    "contact_last_name": "Grant",
+    "contact_email": "e.grant@stormgateanalytics.io",
+    "contact_title": "CTO",
+    "contact_phone": "+442075550606",
+    "funding_rounds": [
+      {
+        "announced_on": "2026-03-01",
+        "title": "Series A",
+        "uuid": "fr-syn006-a",
+        "amount_usd": 8000000.0,
+        "series": "A"
+      }
+    ],
+    "leadership_hires": [],
+    "layoff_events": [],
+    "tech_stack": [
+      {"name": "Python", "technology_category": ["Language"]},
+      {"name": "Databricks", "technology_category": ["Data Platform"]},
+      {"name": "dbt", "technology_category": ["Data"]}
+    ],
+    "icp_segment": 1,
+    "icp_confidence": "high",
+    "ai_maturity_score": 2,
+    "ai_maturity_confidence": "medium",
+    "thread_status": "new",
+    "channel": "email"
+  },
+  {
+    "prospect_id": "syn007",
+    "company_name": "Fenwick Logistics",
+    "website": "https://fenwicklogistics.com",
+    "industries": ["Logistics", "Supply Chain"],
+    "country_code": "US",
+    "region": "Georgia",
+    "employee_count_raw": "501-1000",
+    "employee_count_min": 501,
+    "employee_count_max": 1000,
+    "description": "Last-mile delivery software for regional logistics operators.",
+    "contact_first_name": "Jerome",
+    "contact_last_name": "Watkins",
+    "contact_email": "j.watkins@fenwicklogistics.com",
+    "contact_title": "VP Engineering",
+    "contact_phone": "+14045550707",
+    "funding_rounds": [],
+    "leadership_hires": [
+      {
+        "key_event_date": "2026-01-05",
+        "label": "New VP Engineering: Jerome Watkins (ex-UPS Digital)",
+        "link": null,
+        "uuid": "lh-syn007"
+      }
+    ],
+    "layoff_events": [
+      {
+        "key_event_date": "2025-11-12",
+        "label": "Infrastructure team reduction — 20 engineers",
+        "link": null,
+        "uuid": "le-syn007"
+      }
+    ],
+    "tech_stack": [
+      {"name": "Go", "technology_category": ["Language"]},
+      {"name": "PostgreSQL", "technology_category": ["Database"]},
+      {"name": "AWS", "technology_category": ["Cloud"]}
+    ],
+    "icp_segment": 3,
+    "icp_confidence": "high",
+    "ai_maturity_score": 0,
+    "ai_maturity_confidence": "low",
+    "thread_status": "new",
+    "channel": "email"
+  },
+  {
+    "prospect_id": "syn008",
+    "company_name": "Quilted Data",
+    "website": "https://quilteddata.com",
+    "industries": ["Data Infrastructure", "SaaS"],
+    "country_code": "US",
+    "region": "Colorado",
+    "employee_count_raw": "11-50",
+    "employee_count_min": 11,
+    "employee_count_max": 50,
+    "description": "Quilted builds managed data pipeline tooling for analytics teams at mid-market SaaS companies.",
+    "contact_first_name": "Nadia",
+    "contact_last_name": "Petrov",
+    "contact_email": "nadia@quilteddata.com",
+    "contact_title": "Co-founder & CTO",
+    "contact_phone": "+17205550808",
+    "funding_rounds": [
+      {
+        "announced_on": "2025-12-08",
+        "title": "Seed",
+        "uuid": "fr-syn008-s",
+        "amount_usd": 2200000.0,
+        "series": "Seed"
+      }
+    ],
+    "leadership_hires": [],
+    "layoff_events": [],
+    "tech_stack": [
+      {"name": "Python", "technology_category": ["Language"]},
+      {"name": "dbt", "technology_category": ["Data"]},
+      {"name": "Airflow", "technology_category": ["Orchestration"]}
+    ],
+    "icp_segment": 1,
+    "icp_confidence": "medium",
+    "ai_maturity_score": 1,
+    "ai_maturity_confidence": "low",
+    "thread_status": "new",
+    "channel": "email"
+  }
+]
