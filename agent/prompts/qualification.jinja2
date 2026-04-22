@@ -1,0 +1,67 @@
+{#
+  qualification.jinja2 — Qualification-stage email template (2nd–4th exchange)
+  Tenacious Consulting & Outsourcing SDR Agent
+
+  Required variables:
+    contact_first_name        (str)       — prospect's first name
+    company_name              (str)       — prospect company name
+    their_last_message        (str)       — verbatim or paraphrased summary of what
+                                           the prospect said in their last reply
+    next_qualification_question (str)     — the next unanswered qualification question
+                                           (one of Q1–Q4 from the system prompt)
+    answered_questions        (list[str]) — list of questions already answered, used
+                                           to avoid repetition and to show progress
+    is_qualified              (bool)      — True when all 4 questions are answered;
+                                           triggers calendar booking CTA
+    calendar_link             (str|None)  — Cal.com booking URL, required if is_qualified
+
+  Qualification questions (for reference — pass the text as next_qualification_question):
+    Q1: What specific engineering initiative or project is the top priority right now?
+    Q2: What is the timeline or milestone pressure on that initiative?
+    Q3: What is currently blocking or slowing that initiative?
+    Q4: Who else is involved in the decision to bring in external engineering support?
+
+  Guardrail notes:
+    - This template is only used after the prospect has replied at least once.
+    - tone_checker.enforce() must be called on the rendered output before send.
+    - One ask per message — next_qualification_question must be a single question.
+    - If is_qualified is True, calendar_link must not be None.
+#}
+
+{{ contact_first_name }},
+
+{% if their_last_message %}
+Thanks for that — helpful context.
+{% if answered_questions %}
+
+To summarize what I've got so far:
+{% for q in answered_questions %}
+- {{ q }}
+{% endfor %}
+
+{% endif %}
+{% endif %}
+
+{% if not is_qualified %}
+One more thing to make sure we'd actually be useful to you before suggesting next steps:
+
+{{ next_qualification_question }}
+
+Happy to answer any questions about how we typically work in the meantime.
+
+{% else %}
+Based on what you've shared, this sounds like a good match for how we engage — a scoped
+squad, bounded timeline, specific outcome.
+
+The right next step is a 25-minute call with one of our technical leads at Tenacious.
+They can walk through stack fit, team composition, and what a first sprint would look like.
+
+You can grab time here: {{ calendar_link }}
+
+No prep needed on your end.
+
+{% endif %}
+
+{% if not is_qualified %}
+No pressure — if the timing is off or the fit isn't there, good to know that too.
+{% endif %}

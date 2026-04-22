@@ -1,0 +1,62 @@
+{#
+  sms_warm.jinja2 — SMS coordination messages (warm leads only)
+  Tenacious Consulting & Outsourcing SDR Agent
+
+  CHANNEL RULE: SMS is ONLY sent to prospects who have already replied to at least one
+  email AND have indicated SMS preference or requested mobile follow-up. Cold SMS is
+  prohibited under all circumstances.
+
+  Required variables:
+    contact_first_name  (str) — prospect's first name
+    company_name        (str) — prospect company name
+    topic               (str) — brief phrase describing the subject of the conversation
+                                (e.g., "the ML infrastructure engagement")
+    calendar_link       (str) — Cal.com booking URL
+    sender_name         (str) — sender's name (first name only for SMS)
+
+  Output: 3 discrete SMS messages
+    MSG_1: Confirmation that SMS thread is open (sent immediately after email reply
+           indicates SMS preference)
+    MSG_2: Calendar link delivery (sent if prospect asks for the booking link via SMS
+           or after MSG_1 is acknowledged)
+    MSG_3: Final follow-up (sent once, 2 business days after MSG_2, if no booking
+           is made and no reply received)
+
+  Hard constraints:
+    - Each message must be ≤ 160 characters INCLUDING spaces and the sender name.
+    - No pitch content in SMS. Coordination only.
+    - One call to action per message.
+    - If the prospect replies "stop", "unsubscribe", or "no thanks", log opt-out
+      immediately and send no further SMS.
+    - Confirm opt-out compliance before rendering MSG_1.
+
+  Guardrail notes:
+    - tone_checker.enforce() must be called on the rendered output before send.
+    - sms_handler must verify the prospect's opt-in status before dispatching any
+      message in this sequence.
+#}
+
+{# ── MSG_1: Confirmation ── #}
+{# Triggered when prospect indicates SMS preference after email reply #}
+{# Max 160 chars — check rendered length before send #}
+
+MSG_1:
+{{ sender_name }} @ Tenacious: Got it — I'll follow up here. We were discussing {{ topic }} for {{ company_name }}. I'll send the booking link shortly.
+
+---
+
+{# ── MSG_2: Calendar link ── #}
+{# Triggered when prospect acknowledges MSG_1 or explicitly requests the link #}
+{# Max 160 chars — check rendered length before send #}
+
+MSG_2:
+{{ sender_name }} @ Tenacious: Here is the link to book time with our technical lead — 25 min, no prep needed: {{ calendar_link }}
+
+---
+
+{# ── MSG_3: Final follow-up ── #}
+{# Sent once, 2 business days after MSG_2, only if no booking confirmed and no reply #}
+{# Max 160 chars — check rendered length before send #}
+
+MSG_3:
+{{ sender_name }} @ Tenacious: Still happy to connect on {{ topic }}. Link still works: {{ calendar_link }} — reply STOP to opt out.

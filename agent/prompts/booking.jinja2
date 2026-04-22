@@ -1,0 +1,40 @@
+{#
+  booking.jinja2 — Calendar booking message (qualified lead)
+  Tenacious Consulting & Outsourcing SDR Agent
+
+  Required variables:
+    contact_first_name  (str) — prospect's first name
+    company_name        (str) — prospect company name
+    brief_summary       (str) — 2-sentence recap of what the agent learned during
+                                qualification (initiative + constraint). Written by
+                                the agent from answered Q1–Q4, not fabricated.
+    calendar_link       (str) — Cal.com booking URL (must be confirmed non-null
+                                before this template is rendered)
+    sender_name         (str) — name shown in signature
+
+  Purpose: This message is sent only after is_qualified == True. The prospect has
+  already indicated interest and answered all qualification questions. Do not re-pitch.
+  Do not introduce new information. Just close the loop and hand off to a human call.
+
+  Guardrail notes:
+    - tone_checker.enforce() must be called on the rendered output before send.
+    - No asks beyond the calendar link — they have already said yes in principle.
+    - bench_guard must confirm availability for the relevant specialty before this
+      message is sent; if the bench is at zero, escalate to a human SDR instead.
+#}
+
+{{ contact_first_name }},
+
+Here is what I have on my end:
+
+{{ brief_summary }}
+
+That is a solid basis for a 25-minute call. One of our technical leads will walk through
+squad composition, stack alignment, and what week one would actually look like.
+
+Grab time here: {{ calendar_link }}
+
+The link goes straight to their calendar — no back-and-forth needed.
+
+{{ sender_name }}
+Tenacious Consulting & Outsourcing
