@@ -1,0 +1,47 @@
+services:
+
+  calcom:
+    image: calcom/cal.com:latest
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://calcom:calcom@calcom_db:5432/calcom
+      - DATABASE_DIRECT_URL=postgresql://calcom:calcom@calcom_db:5432/calcom
+      - NEXTAUTH_SECRET=ed3d8a4f23ddf6a2aa7800a6336356568105d6a9ac67088fdd5fe1069d72a33
+      - CALENDSO_ENCRYPTION_KEY=0a2133a2727182e6f1df17a5f6b03d00
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXT_PUBLIC_WEBAPP_URL=http://localhost:3000
+      - DISABLE_EMAILS=true
+    depends_on:
+      calcom_migrate:
+        condition: service_completed_successfully
+
+  calcom_migrate:
+    image: calcom/cal.com:latest
+    command: npx prisma migrate deploy
+    environment:
+      - DATABASE_URL=postgresql://calcom:calcom@calcom_db:5432/calcom
+      - DATABASE_DIRECT_URL=postgresql://calcom:calcom@calcom_db:5432/calcom
+    depends_on:
+      calcom_db:
+        condition: service_healthy
+    restart: "no"
+
+  calcom_db:
+    image: postgres:15
+    restart: always
+    environment:
+      - POSTGRES_USER=calcom
+      - POSTGRES_PASSWORD=calcom
+      - POSTGRES_DB=calcom
+    volumes:
+      - calcom_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U calcom"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  calcom_db_data:

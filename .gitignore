@@ -1,0 +1,45 @@
+# Environment — never commit real keys
+.env
+.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Data — raw CSVs and generated pipeline outputs (keep seed + synthetic)
+data/raw/
+data/processed/
+
+# Tau2-bench (cloned repo — tracked separately)
+tau2-bench/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docs PDFs (binary)
+docs/
+
+# Misc root-level txt copies of PDFs
+challenge_pdf.txt
+scenario_pdf.txt
+
+# Logs
+*.log
+eval/trace_log.jsonl
+eval/latency_log.jsonl
