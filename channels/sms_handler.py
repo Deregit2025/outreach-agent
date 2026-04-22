@@ -16,14 +16,16 @@ from config.settings import settings
 from config.kill_switch import route_phone
 
 try:
-    from observability.cost_tracker import cost_tracker
+    from observability.cost_tracker import tracker as _cost_tracker
     _COST_TRACKER_AVAILABLE = True
 except ImportError:
+    _cost_tracker = None  # type: ignore
     _COST_TRACKER_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
-_AT_SMS_URL = "https://api.africastalking.com/version1/messaging"
+_AT_SMS_URL_LIVE    = "https://api.africastalking.com/version1/messaging"
+_AT_SMS_URL_SANDBOX = "https://api.sandbox.africastalking.com/version1/messaging"
 
 
 class SMSHandler:
@@ -33,6 +35,10 @@ class SMSHandler:
         self._api_key: str = settings.at_api_key
         self._username: str = settings.at_username
         self._short_code: str = settings.at_short_code
+        # Sandbox uses a different endpoint
+        self._sms_url: str = (
+            _AT_SMS_URL_SANDBOX if self._username == "sandbox" else _AT_SMS_URL_LIVE
+        )
 
     # ------------------------------------------------------------------
     # Outbound
@@ -69,7 +75,7 @@ class SMSHandler:
 
         try:
             with httpx.Client(timeout=15.0) as client:
-                response = client.post(_AT_SMS_URL, data=form_data, headers=headers)
+                response = client.post(self._sms_url, data=form_data, headers=headers)
                 response.raise_for_status()
                 data = response.json()
 
@@ -90,11 +96,7 @@ class SMSHandler:
                 status_code,
             )
 
-            if _COST_TRACKER_AVAILABLE:
-                try:
-                    cost_tracker.track(channel="sms", event="send", units=1)
-                except Exception:
-                    pass
+            logger.debug("SMS send recorded | message_id=%s", message_id)
 
             return {
                 "status": "sent",

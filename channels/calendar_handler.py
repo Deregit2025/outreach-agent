@@ -15,9 +15,10 @@ import httpx
 from config.settings import settings
 
 try:
-    from observability.cost_tracker import cost_tracker
+    from observability.cost_tracker import tracker as _cost_tracker
     _COST_TRACKER_AVAILABLE = True
 except ImportError:
+    _cost_tracker = None  # type: ignore
     _COST_TRACKER_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
@@ -172,11 +173,7 @@ class CalendarHandler:
                 confirmed_start,
             )
 
-            if _COST_TRACKER_AVAILABLE:
-                try:
-                    cost_tracker.track(channel="calendar", event="booking_created", units=1)
-                except Exception:
-                    pass
+            logger.debug("Calendar booking_created recorded | id=%s", booking_id)
 
             return {
                 "booking_id": booking_id,

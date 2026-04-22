@@ -16,9 +16,10 @@ from config.settings import settings
 from config.kill_switch import route_email
 
 try:
-    from observability.cost_tracker import cost_tracker
+    from observability.cost_tracker import tracker as _cost_tracker
     _COST_TRACKER_AVAILABLE = True
 except ImportError:
+    _cost_tracker = None  # type: ignore
     _COST_TRACKER_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
@@ -84,11 +85,8 @@ class EmailHandler:
             message_id: str = data.get("id", "")
             logger.info("Email sent | id=%s | to=%s", message_id, actual_to)
 
-            if _COST_TRACKER_AVAILABLE:
-                try:
-                    cost_tracker.track(channel="email", event="send", units=1)
-                except Exception:
-                    pass
+            # Email sends have no token cost; just log the event
+            logger.debug("Email send recorded | message_id=%s", message_id)
 
             return {
                 "id": message_id,

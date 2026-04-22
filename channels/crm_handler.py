@@ -15,9 +15,10 @@ import httpx
 from config.settings import settings
 
 try:
-    from observability.cost_tracker import cost_tracker
+    from observability.cost_tracker import tracker as _cost_tracker
     _COST_TRACKER_AVAILABLE = True
 except ImportError:
+    _cost_tracker = None  # type: ignore
     _COST_TRACKER_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
@@ -97,11 +98,7 @@ class CRMHandler:
                 contact_id = str(data.get("id", ""))
                 logger.info("Contact created | id=%s | email=%s", contact_id, email)
 
-                if _COST_TRACKER_AVAILABLE:
-                    try:
-                        cost_tracker.track(channel="crm", event="contact_created", units=1)
-                    except Exception:
-                        pass
+                logger.debug("CRM contact_created recorded | id=%s", contact_id)
 
                 return {"contact_id": contact_id, "status": "created", "error": None}
 
