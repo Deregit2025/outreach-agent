@@ -18,44 +18,91 @@ from __future__ import annotations
 import re
 
 
+from __future__ import annotations
+
+"""
+tone_checker.py — Outreach tone validation and over-claim detection.
+Tenacious Consulting & Outsourcing SDR Agent
+
+Every outbound message must pass enforce() before the channel handler sends it.
+A failed check blocks the send and returns a structured report for logging/escalation.
+
+Design principles:
+  - Prohibited phrases are loaded from the style guide.
+  - Over-claims are flagged based on the provided signals list; the caller is
+    responsible for passing the full evaluated signal set.
+  - score_tone() returns a 0–10 quality score: 10 = pristine, 0 = do not send.
+  - enforce() is the single entry point used by the agent before every send.
+"""
+
+import re
+from pathlib import Path
+
+
 # ---------------------------------------------------------------------------
-# Prohibited phrases (hard block)
+# Load prohibited phrases from style guide
 # ---------------------------------------------------------------------------
 
-PROHIBITED_PHRASES: list[str] = [
-    "excited to connect",
-    "i hope this email finds you well",
-    "i hope this finds you well",
-    "hope this finds you well",
-    "world-class",
-    "cutting-edge",
-    "best-in-class",
-    "innovative",          # generic descriptor; specific innovation claims are OK
-    "synergy",
-    "synergies",
-    "just following up",
-    "i wanted to reach out",
-    "offshore team",
-    "scale your team aggressively",
-    "aggressively scale",
-    "move fast and break things",
-    "game-changing",
-    "disruptive",
-    "revolutionize",
-    "transformative solution",
-    "end-to-end solution",
-    "one-stop shop",
-    "trusted partner",
-    "strategic partner",
-    "value-add",
-    "low-hanging fruit",
-    "circle back",
-    "touch base",
-    "per my last email",
-    "as per my previous",
-    "hope you had a great weekend",
-    "hope you're having a great day",
-]
+def _load_prohibited_phrases() -> list[str]:
+    """Load prohibited phrases from the tenacious_sales_data/seed/style_guide.md file."""
+    style_guide_path = Path("data/tenacious_sales_data/seed/style_guide.md")
+    
+    if not style_guide_path.exists():
+        # Fallback prohibited phrases
+        return [
+            "excited to connect",
+            "i hope this email finds you well",
+            "world-class",
+            "cutting-edge", 
+            "best-in-class",
+            "innovative",
+            "synergy",
+            "just following up",
+            "i wanted to reach out",
+            "offshore team",
+            "scale your team aggressively",
+        ]
+    
+    content = style_guide_path.read_text()
+    
+    # Extract prohibited phrases from the "Prohibited phrases" section
+    prohibited_section = ""
+    in_section = False
+    for line in content.splitlines():
+        if "### Prohibited phrases" in line:
+            in_section = True
+            continue
+        elif in_section and line.startswith("###"):
+            break
+        elif in_section:
+            prohibited_section += line + "\n"
+    
+    # Parse the list items
+    phrases = []
+    for line in prohibited_section.splitlines():
+        line = line.strip()
+        if line.startswith("- "):
+            phrase = line[2:].strip()
+            if phrase.startswith('"') and phrase.endswith('"'):
+                phrase = phrase[1:-1]
+            phrases.append(phrase.lower())
+    
+    return phrases if phrases else [
+        "excited to connect",
+        "i hope this email finds you well", 
+        "world-class",
+        "cutting-edge",
+        "best-in-class",
+        "innovative",
+        "synergy",
+        "just following up",
+        "i wanted to reach out",
+        "offshore team",
+        "scale your team aggressively",
+    ]
+
+
+PROHIBITED_PHRASES: list[str] = _load_prohibited_phrases()
 
 # ---------------------------------------------------------------------------
 # Over-claim signal mappings
