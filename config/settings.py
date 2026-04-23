@@ -52,6 +52,33 @@ class Settings(BaseSettings):
     budget_eval_llm: float = Field(12.00, env="BUDGET_EVAL_LLM")
     budget_total: float = Field(20.00, env="BUDGET_TOTAL")
 
+    # ── Pricing (from tenacious_sales_data/seed) ──────────────
+    junior_monthly_rate: int = Field(2500, env="JUNIOR_MONTHLY_RATE")
+    mid_monthly_rate: int = Field(3500, env="MID_MONTHLY_RATE")
+    senior_monthly_rate: int = Field(5000, env="SENIOR_MONTHLY_RATE")
+    manager_monthly_rate: int = Field(7000, env="MANAGER_MONTHLY_RATE")
+    junior_hourly_rate: int = Field(35, env="JUNIOR_HOURLY_RATE")
+    senior_hourly_rate: int = Field(65, env="SENIOR_HOURLY_RATE")
+    blended_hourly_rate: int = Field(50, env="BLENDED_HOURLY_RATE")
+    project_acv_min: int = Field(15000, env="PROJECT_ACV_MIN")
+    small_tool_project: int = Field(25000, env="SMALL_TOOL_PROJECT")
+    mvp_project: int = Field(50000, env="MVP_PROJECT")
+    mid_system_min: int = Field(75000, env="MID_SYSTEM_MIN")
+    mid_system_max: int = Field(150000, env="MID_SYSTEM_MAX")
+    large_platform_min: int = Field(200000, env="LARGE_PLATFORM_MIN")
+    large_platform_max: int = Field(500000, env="LARGE_PLATFORM_MAX")
+    
+    # ── ACV ranges (from baseline_numbers.md) ────────────────
+    acv_min: int = Field(10800, env="ACV_MIN")  # 3-engineer, 12-month at junior rate
+    acv_max: int = Field(300000, env="ACV_MAX")
+    project_acv_max: int = Field(500000, env="PROJECT_ACV_MAX")
+    training_acv_min: int = Field(10000, env="TRAINING_ACV_MIN")
+    training_acv_max: int = Field(50000, env="TRAINING_ACV_MAX")
+    mid_outsourcing_min: int = Field(50000, env="MID_OUTSOURCING_MIN")
+    mid_outsourcing_max: int = Field(200000, env="MID_OUTSOURCING_MAX")
+    squad_min: int = Field(25000, env="SQUAD_MIN")
+    platform_max: int = Field(500000, env="PLATFORM_MAX")
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
