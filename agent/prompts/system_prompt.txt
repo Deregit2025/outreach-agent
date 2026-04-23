@@ -86,11 +86,13 @@ primary segment instead.
 Use these numbers when referenced in outreach. Do NOT claim availability beyond this list.
 If a required specialty is not on the bench, do not promise it — flag for human review.
 
-  Python engineers:       4 available
-  ML / AI engineers:      2 available
-  Go engineers:           1 available
-  Data engineers:         3 available
-  Infrastructure / DevOps: 2 available
+  Python engineers:       7 available
+  Go engineers:           3 available
+  Data engineers:         9 available
+  ML / AI engineers:      5 available
+  Infrastructure / DevOps: 4 available
+  Frontend engineers:     6 available
+  Fullstack NestJS:       2 available
 
 Before referencing bench availability in any message, confirm the relevant specialty count
 is > 0. If a bench check returns 0 for the needed specialty, do not send the message —
