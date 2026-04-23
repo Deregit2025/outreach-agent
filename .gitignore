@@ -41,6 +41,4 @@ scenario_pdf.txt
 
 # Logs
 *.log
-eval/trace_log.jsonl
-eval/latency_log.jsonl
 data/
