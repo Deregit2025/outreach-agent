@@ -1,52 +1,52 @@
 """
 Bench summary loader.
 
-Reads bench_summary.md from the seed repo and exposes
+Reads bench_summary.json from the tenacious_sales_data/seed folder and exposes
 available engineer counts to bench_guard.py.
-
-Replace the HARDCODED_BENCH dict below with real values
-once you receive bench_summary.md on Day 0.
 """
 
+import json
 from pathlib import Path
 
 
 # ── Fallback hardcoded values ─────────────────────────────────
 # Replace these with values from the actual seed repo file.
 HARDCODED_BENCH: dict[str, int] = {
-    "python":          4,
-    "ml":              2,
-    "go":              1,
-    "data":            3,
-    "infrastructure":  2,
+    "python":          7,
+    "ml":              5,
+    "go":              3,
+    "data":            9,
+    "infrastructure":  4,
+    "frontend":        6,
+    "fullstack_nestjs": 2,
 }
 
 
 def load_bench() -> dict[str, int]:
     """
-    Tries to load bench_summary.md from the seed repo path.
+    Tries to load bench_summary.json from the tenacious_sales_data/seed folder.
     Falls back to hardcoded values if file not found.
-    Returns a dict of {stack_name: available_count}.
+    Returns a dict of {stack_name: available_engineers}.
     """
-    bench_path = Path("data/raw/bench_summary.md")
+    bench_path = Path("data/tenacious_sales_data/seed/bench_summary.json")
 
     if not bench_path.exists():
         return HARDCODED_BENCH.copy()
 
-    bench: dict[str, int] = {}
-    for line in bench_path.read_text().splitlines():
-        line = line.strip().lower()
-        # Parses lines like: "Python backend: 4 engineers"
-        for stack in HARDCODED_BENCH:
-            if stack in line:
-                parts = [p for p in line.split() if p.isdigit()]
-                if parts:
-                    bench[stack] = int(parts[0])
+    try:
+        with open(bench_path, 'r') as f:
+            data = json.load(f)
+        
+        bench = {}
+        for stack, details in data.get("stacks", {}).items():
+            bench[stack] = details.get("available_engineers", 0)
+        
+        if not bench:
+            return HARDCODED_BENCH.copy()
 
-    if not bench:
+        return bench
+    except (json.JSONDecodeError, KeyError):
         return HARDCODED_BENCH.copy()
-
-    return bench
 
 
 # Single instance imported everywhere
