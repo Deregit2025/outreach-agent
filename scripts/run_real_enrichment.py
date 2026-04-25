@@ -60,7 +60,7 @@ CAREERS_URL = "https://airbyte.com/careers"
 CONTACT = {
     "contact_first_name": "Alex",
     "contact_last_name": "Rivera",
-    "contact_email": "alex.rivera@airbyte-demo.invalid",   # routed to staff sink
+    "contact_email": "alex.rivera@airbyte.io",   # synthetic — routed to staff sink via kill switch
     "contact_title": "VP Engineering",
     "contact_phone": "+14155550199",
 }
@@ -117,9 +117,9 @@ def main() -> None:
 
     print(f"\n  Competitor Gap Brief:")
     print(f"    Hook: {comp_brief.gap_hook[:120] if comp_brief.gap_hook else 'none'}")
-    print(f"    Peers analyzed: {len(comp_brief.competitors)}")
-    for gap in comp_brief.capability_gaps[:3]:
-        print(f"    Gap: {gap.capability_name} — {gap.evidence[:60]}")
+    print(f"    Peers analyzed: {len(comp_brief.peers)}")
+    for gap in comp_brief.gaps[:3]:
+        print(f"    Gap: {gap.capability} — {gap.evidence[:60]}")
 
     # Show job velocity specifically (the Playwright scrape result)
     if brief.job_velocity:
@@ -141,9 +141,21 @@ def main() -> None:
     print("Step 2: Running agent -> send cold email to staff sink ...")
     print(f"{'='*65}\n")
 
+    # If ODM didn't find the company, ICP classifier abstains.
+    # Fall back to segment 1 (active hiring = fresh-growth pattern) when
+    # job_velocity is the only signal and no disqualifiers exist.
+    if not prospect.icp_segment:
+        prospect.icp_segment = 1
+        prospect.icp_confidence = "medium"
+        brief.recommended_segment = 1
+        brief.segment_confidence = "medium"
+        print("\n  [Note] No Crunchbase record found — defaulting to segment 1 (active hiring signal)")
+
     state = ConversationState(
         prospect_id="real001",
         company_name=COMPANY_NAME,
+        segment=prospect.icp_segment or 1,
+        segment_confidence=prospect.icp_confidence or "medium",
     )
     router = ChannelRouter()
 

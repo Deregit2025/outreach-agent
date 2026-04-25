@@ -32,6 +32,15 @@ logger = logging.getLogger(__name__)
 _PROMPTS_DIR = Path(__file__).parent / "prompts"
 _SYSTEM_PROMPT = (_PROMPTS_DIR / "system_prompt.txt").read_text(encoding="utf-8")
 
+# Lazy-init RAG index once per process
+try:
+    from enrichment.seed_rag import init_rag, retrieve_relevant_passages, build_prospect_query
+    init_rag()
+    _RAG_AVAILABLE = True
+except Exception as _rag_exc:
+    logger.warning("RAG unavailable: %s", _rag_exc)
+    _RAG_AVAILABLE = False
+
 _jinja_env = Environment(
     loader=FileSystemLoader(str(_PROMPTS_DIR)),
     autoescape=False,
@@ -146,6 +155,11 @@ def _build_signal_opening(brief: HiringSignalBrief, segment: int) -> tuple[str, 
             score=score,
             confidence=primary_signal.confidence,
         )
+    elif stype == "job_velocity":
+        # Use the stored language_register from the velocity tracker, or assert if high confidence
+        register = primary_signal.language_register or (
+            "assert" if primary_signal.confidence == "high" else "hedge"
+        )
     else:
         register = primary_signal.language_register or "ask"
 
@@ -182,6 +196,13 @@ def _build_signal_opening(brief: HiringSignalBrief, segment: int) -> tuple[str, 
             assert_text=f"{company} has an established AI/ML practice — we noticed your investment in this space.",
             hedge_text=f"It looks like {company} may be building out AI/ML capabilities.",
             ask_text=f"Are you currently investing in AI/ML capabilities or exploring where they might fit?",
+        )
+    elif stype == "job_velocity":
+        opening = apply_register(
+            register,
+            assert_text=f"{company} has {value} on public job boards right now — that pace typically outstrips in-house recruiting capacity.",
+            hedge_text=f"It looks like {company} has been ramping up engineering hiring recently.",
+            ask_text=f"Are you in a phase where engineering hiring is moving faster than your internal recruiting can keep up?",
         )
     else:
         opening = f"I came across {company} and noticed some signals that seemed relevant."
@@ -234,16 +255,43 @@ def _generate_cold_email(
     """
     signal_opening, evaluated = _build_signal_opening(brief, state.segment)
 
+    # RAG retrieval — pull relevant Tenacious context before LLM call
+    rag_context = ""
+    case_study_line = None
+    if _RAG_AVAILABLE:
+        try:
+            rag_query = build_prospect_query(
+                segment=state.segment,
+                company_name=prospect.company_name,
+                ai_maturity_score=prospect.ai_maturity_score or 0,
+            )
+            passages = retrieve_relevant_passages(rag_query, top_k=4)
+            if passages:
+                rag_parts = []
+                for p in passages:
+                    rag_parts.append(
+                        f"[{p['source_type']} — {p['source']}]\n{p['passage'][:300]}"
+                    )
+                    # Use first case study for the template case_study_line
+                    if case_study_line is None and p["source_type"] == "case_study":
+                        case_study_line = p["passage"][:200].split("\n")[0].strip()
+                rag_context = "\n\n".join(rag_parts)
+        except Exception as _rag_err:
+            logger.debug("RAG retrieval skipped: %s", _rag_err)
+
     # Ask LLM for bridge and qualification_ask
     ctx = _build_brief_context(prospect, brief, comp_brief, state)
+    rag_section = f"\nTENACIOUS REFERENCE MATERIAL (use for tone and specifics):\n{rag_context}\n" if rag_context else ""
     llm_resp = _llm_call([
         {"role": "system", "content": _SYSTEM_PROMPT},
         {"role": "user", "content": (
-            f"PROSPECT BRIEF:\n{ctx}\n\n"
+            f"PROSPECT BRIEF:\n{ctx}\n"
+            f"{rag_section}\n"
             "Write ONLY a JSON object with two keys:\n"
             '  "bridge": 1-2 sentences connecting the signal to a common pattern for this segment\n'
             '  "qualification_ask": one low-commitment qualifying question (no question mark stacking)\n'
-            "Keep the bridge under 30 words. Keep the ask under 20 words."
+            "Keep the bridge under 30 words. Keep the ask under 20 words. "
+            "Use language and tone consistent with the reference material above."
         )},
     ])
 
@@ -266,7 +314,7 @@ def _generate_cold_email(
         segment=state.segment,
         signal_opening=signal_opening,
         bridge=bridge,
-        case_study_line=None,
+        case_study_line=case_study_line,
         qualification_ask=qualification_ask,
         sender_name="The Tenacious Team",
     )

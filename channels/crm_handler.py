@@ -308,9 +308,11 @@ class CRMHandler:
             {"activity_id": str, "status": "logged" | "error", "error": None | str}
         """
         url = f"{self.BASE}/crm/v3/objects/emails"
+        _direction_map = {"OUTBOUND": "EMAIL", "INBOUND": "INCOMING_EMAIL"}
+        hs_direction = _direction_map.get(direction, "EMAIL")
         payload: dict[str, Any] = {
             "properties": {
-                "hs_email_direction": direction,
+                "hs_email_direction": hs_direction,
                 "hs_email_status": "SENT" if direction == "OUTBOUND" else "RECEIVED",
                 "hs_email_subject": subject,
                 "hs_email_text": body,
