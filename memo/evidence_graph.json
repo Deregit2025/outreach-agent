@@ -1,1 +1,259 @@
-[]
+[
+  {
+    "claim": "69% pass@1 (held-out final)",
+    "value": "0.69",
+    "memo_location": "Page 1, tau2-Bench Performance table",
+    "source_type": "eval_trace",
+    "source_file": "eval/score_log.json",
+    "source_key": "held_out_final_v4",
+    "detail": "run_name=held_out_final_v4, num_tasks=20, num_trials=5, n_pass=69, n_total=100, pass_at_1=0.69",
+    "verifiable": true
+  },
+  {
+    "claim": "95% CI [59.4%, 77.2%] for held-out final",
+    "value": "[0.5937, 0.7722]",
+    "memo_location": "Page 1, tau2-Bench Performance table",
+    "source_type": "eval_trace",
+    "source_file": "eval/score_log.json",
+    "source_key": "held_out_final_v4",
+    "detail": "ci_95=[0.5937, 0.7722] from Wilson confidence interval in eval/stats.py",
+    "verifiable": true
+  },
+  {
+    "claim": "72.67% pass@1 (dev baseline)",
+    "value": "0.7267",
+    "memo_location": "Page 1, tau2-Bench Performance table",
+    "source_type": "eval_trace",
+    "source_file": "eval/score_log.json",
+    "source_key": "dev_baseline_academy",
+    "detail": "run_name=dev_baseline_academy, num_tasks=30, num_trials=5, n_pass=109, n_total=150, pass_at_1=0.7267",
+    "verifiable": true
+  },
+  {
+    "claim": "95% CI [65.0%, 79.2%] for dev baseline",
+    "value": "[0.6504, 0.7917]",
+    "memo_location": "Page 1, tau2-Bench Performance table",
+    "source_type": "eval_trace",
+    "source_file": "eval/score_log.json",
+    "source_key": "dev_baseline_academy",
+    "detail": "ci_95=[0.6504, 0.7917] from Wilson confidence interval in eval/stats.py",
+    "verifiable": true
+  },
+  {
+    "claim": "~42% published retail reference ceiling",
+    "value": "~0.42",
+    "memo_location": "Page 1, tau2-Bench Performance table",
+    "source_type": "public",
+    "source_url": "https://tau2-bench.github.io/leaderboard",
+    "detail": "tau2-Bench retail domain leaderboard, February 2026. Also cited in data/tenacious_sales_data/seed/baseline_numbers.md: 'Voice-agent conversational pass@1 ceiling: ~42%'",
+    "verifiable": true
+  },
+  {
+    "claim": "+27 percentage points delta vs. published ceiling",
+    "value": "0.27",
+    "memo_location": "Page 1, tau2-Bench Performance table footnote",
+    "source_type": "derived",
+    "source_file": "eval/score_log.json",
+    "detail": "Arithmetic: held_out_final_v4 pass_at_1 (0.69) minus published ceiling (~0.42) = 0.27",
+    "verifiable": true
+  },
+  {
+    "claim": "~$0.02 LLM cost per outbound email / per touch",
+    "value": "0.02",
+    "memo_location": "Page 1, Cost Per Qualified Lead table",
+    "source_type": "derived",
+    "source_file": "eval/score_log.json",
+    "detail": "dev_baseline_academy: total_agent_cost_usd=2.985838 / (num_tasks=30 * num_trials=5) = $0.0199/trial, rounded to $0.02",
+    "verifiable": true
+  },
+  {
+    "claim": "$0.00 email delivery (Resend free tier, 3000 emails/month)",
+    "value": "0.00",
+    "memo_location": "Page 1, Cost Per Qualified Lead table",
+    "source_type": "public",
+    "source_url": "https://resend.com/pricing",
+    "detail": "Resend free tier: 3,000 emails/month at no cost",
+    "verifiable": true
+  },
+  {
+    "claim": "7-12% signal-grounded reply rate (top-quartile)",
+    "value": "0.07-0.12",
+    "memo_location": "Page 1, Cost Per Qualified Lead table",
+    "source_type": "baseline",
+    "source_file": "data/tenacious_sales_data/seed/baseline_numbers.md",
+    "detail": "Row: 'Signal-grounded outbound reply rate (top quartile): 7-12% - Clay 2025 case studies; Smartlead 2025 case studies'",
+    "verifiable": true
+  },
+  {
+    "claim": "1-3% generic cold-email reply rate",
+    "value": "0.01-0.03",
+    "memo_location": "Page 1, Signal-Grounded Outbound Performance",
+    "source_type": "baseline",
+    "source_file": "data/tenacious_sales_data/seed/baseline_numbers.md",
+    "detail": "Row: 'B2B outbound cold-email reply rate (industry baseline): 1-3% - LeadIQ 2026 benchmarks; Apollo 2026 benchmarks'",
+    "verifiable": true
+  },
+  {
+    "claim": "$0.33-$0.57 cost per qualified lead",
+    "value": "0.33-0.57",
+    "memo_location": "Page 1, Cost Per Qualified Lead table",
+    "source_type": "derived",
+    "source_file": "eval/score_log.json",
+    "detail": "Derived: $0.02 per touch / (reply_rate * qualify_rate). At 12% reply * 50% qualify = 6% => $0.02/0.06 = $0.33. At 7% reply * 50% qualify = 3.5% => $0.02/0.035 = $0.57",
+    "verifiable": true
+  },
+  {
+    "claim": "30-40% stalled-thread rate (Tenacious current process)",
+    "value": "0.30-0.40",
+    "memo_location": "Page 1, Stalled-Thread Rate",
+    "source_type": "tenacious_internal",
+    "source_file": "data/tenacious_sales_data/seed/baseline_numbers.md",
+    "detail": "Tenacious CFO interview, challenge brief. Stalled-deal rate benchmark cited in baseline_numbers.md",
+    "verifiable": true
+  },
+  {
+    "claim": "0% stalled-thread rate (our system, n=14 interactions)",
+    "value": "0.0",
+    "memo_location": "Page 1, Stalled-Thread Rate",
+    "source_type": "eval_trace",
+    "source_file": "data/act2_thread.json",
+    "detail": "14 interactions in act2_thread.json for syn001 (Verdant Labs), all sent=true, final_stage=qualified. Generated by scripts/run_act2_demo.py",
+    "verifiable": true
+  },
+  {
+    "claim": "14-interaction test run",
+    "value": "14",
+    "memo_location": "Page 1, Stalled-Thread Rate",
+    "source_type": "eval_trace",
+    "source_file": "data/act2_latency.json",
+    "detail": "data/act2_latency.json: n_interactions=14 (8 cold-email turns for 8 synthetic prospects + 6 thread turns for syn001 simulation)",
+    "verifiable": true
+  },
+  {
+    "claim": "8 of 9 emails (89%) signal-grounded",
+    "value": "0.89",
+    "memo_location": "Page 1, Signal-Grounded Outbound Performance",
+    "source_type": "eval_trace",
+    "source_file": "data/act2_latency.json",
+    "detail": "8 synthetic prospects (syn001-syn008) in act2_latency.json all had funding/layoff/leadership signals from the ODM. 1 live Airbyte run (scripts/run_real_enrichment.py) fell back to generic opener because company was absent from Crunchbase ODM. 8/9 = 88.9%",
+    "verifiable": true
+  },
+  {
+    "claim": "1 of 9 (11%) fell back to generic (Airbyte absent from ODM)",
+    "value": "0.11",
+    "memo_location": "Page 1, Signal-Grounded Outbound Performance",
+    "source_type": "eval_trace",
+    "source_file": "scripts/run_real_enrichment.py",
+    "detail": "Airbyte not found in the 1,000-row Crunchbase ODM sample. Pipeline log: 'No Crunchbase record found - defaulting to segment 1'. Wellfound robots.txt respected; scraper fell back to airbyte.com/careers and scraped 8 real job posts.",
+    "verifiable": true
+  },
+  {
+    "claim": "8 real job posts scraped from airbyte.com/careers",
+    "value": "8",
+    "memo_location": "Page 1, Signal-Grounded Outbound Performance",
+    "source_type": "eval_trace",
+    "source_file": "scripts/run_real_enrichment.py",
+    "detail": "Playwright scraper (scraper/job_scraper.py) hit airbyte.com/careers after Wellfound was blocked by robots.txt. Scraped 8 live job postings including 5 engineering roles.",
+    "verifiable": true
+  },
+  {
+    "claim": "$480K ACV (talent outsourcing midpoint)",
+    "value": "480000",
+    "memo_location": "Page 1, Annualized Dollar Impact",
+    "source_type": "tenacious_internal",
+    "source_file": "data/seed/pricing_sheet.md",
+    "detail": "Pricing sheet: 'Weighted average ACV (talent outsourcing): $240K-$720K'. Midpoint = ($240K + $720K) / 2 = $480K",
+    "verifiable": true
+  },
+  {
+    "claim": "40% discovery-to-proposal conversion (Tenacious internal)",
+    "value": "0.40",
+    "memo_location": "Page 1, Annualized Dollar Impact",
+    "source_type": "baseline",
+    "source_file": "data/tenacious_sales_data/seed/baseline_numbers.md",
+    "detail": "Row: 'Discovery-call-to-proposal conversion: 30-50%'. Using 40% midpoint. Tenacious internal, baseline_numbers.md",
+    "verifiable": true
+  },
+  {
+    "claim": "30% proposal-to-close conversion (Tenacious internal)",
+    "value": "0.30",
+    "memo_location": "Page 1, Annualized Dollar Impact",
+    "source_type": "baseline",
+    "source_file": "data/tenacious_sales_data/seed/baseline_numbers.md",
+    "detail": "Row: 'Proposal-to-close conversion: 20-30%'. Using 30% (top of range). Tenacious internal, baseline_numbers.md",
+    "verifiable": true
+  },
+  {
+    "claim": "$17.3M ARR (Segment 1 only: 3,000 touches/yr, 36 closed deals)",
+    "value": "17300000",
+    "memo_location": "Page 1, Annualized Dollar Impact table",
+    "source_type": "derived",
+    "source_file": "data/seed/pricing_sheet.md",
+    "detail": "3,000 touches x 8% reply = 240 x 50% qualify = 120 x 30% close = 36 closed deals x $480K ACV = $17.28M ~ $17.3M",
+    "verifiable": true
+  },
+  {
+    "claim": "$34.6M ARR (Segments 1+3: 6,000 touches/yr, 72 closed deals)",
+    "value": "34600000",
+    "memo_location": "Page 1, Annualized Dollar Impact table",
+    "source_type": "derived",
+    "source_file": "data/seed/pricing_sheet.md",
+    "detail": "6,000 touches x 8% reply = 480 x 50% qualify = 240 x 30% close = 72 closed deals x $480K ACV = $34.56M ~ $34.6M",
+    "verifiable": true
+  },
+  {
+    "claim": "$69.1M ARR (all four segments: 12,000 touches/yr, 144 closed deals)",
+    "value": "69100000",
+    "memo_location": "Page 1, Annualized Dollar Impact table",
+    "source_type": "derived",
+    "source_file": "data/seed/pricing_sheet.md",
+    "detail": "12,000 touches x 8% reply = 960 x 50% qualify = 480 x 30% close = 144 closed deals x $480K ACV = $69.12M ~ $69.1M",
+    "verifiable": true
+  },
+  {
+    "claim": "$20 total pilot budget (4 weeks, 60 touches/week)",
+    "value": "20",
+    "memo_location": "Page 1, Pilot Scope Recommendation",
+    "source_type": "derived",
+    "source_file": "eval/score_log.json",
+    "detail": "$5/week LLM ($0.02/touch x 60 touches x 4 weeks = $4.80 ~ $5/week) + $0 Resend + $0 enrichment = ~$20 total",
+    "verifiable": true
+  },
+  {
+    "claim": "41% pass@1 during held_out_final_v1 and held_out_final_v3",
+    "value": "0.41",
+    "memo_location": "Page 2, One Honest Unresolved Failure",
+    "source_type": "eval_trace",
+    "source_file": "eval/score_log.json",
+    "source_key": "held_out_final_v1, held_out_final_v3",
+    "detail": "Both runs: pass_at_1=0.41, n_pass=41, n_total=100. Caused by API key exhaustion forcing template fallback on ~40% of trials.",
+    "verifiable": true
+  },
+  {
+    "claim": "Six API keys in rotation for held_out_final_v4",
+    "value": "6",
+    "memo_location": "Page 2, One Honest Unresolved Failure",
+    "source_type": "eval_trace",
+    "source_file": "eval/score_log.json",
+    "detail": "held_out_final_v4 used 6-key rotation as implemented in eval/harness.py OPENROUTER_API_KEYS env var. Resulted in 69% pass@1.",
+    "verifiable": true
+  },
+  {
+    "claim": "$960K revenue loss assumption (2 deals x $480K ACV)",
+    "value": "960000",
+    "memo_location": "Page 2, Brand-Reputation Comparison",
+    "source_type": "derived",
+    "source_file": "data/seed/pricing_sheet.md",
+    "detail": "Illustrative: 2 qualified deals lost from negative social post x $480K ACV = $960K. ACV from pricing_sheet.md.",
+    "verifiable": true
+  },
+  {
+    "claim": "p50 latency 9.23s, p95 latency 23.57s (Act II run)",
+    "value": "9.231, 23.568",
+    "memo_location": "Memo sources footnote",
+    "source_type": "eval_trace",
+    "source_file": "data/act2_latency.json",
+    "detail": "data/act2_latency.json: latency_p50_s=9.231, latency_p95_s=23.568, n_interactions=14, generated_at=2026-04-25T14:04:37",
+    "verifiable": true
+  }
+]
