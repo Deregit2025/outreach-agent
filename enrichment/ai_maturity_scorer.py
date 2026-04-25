@@ -195,4 +195,20 @@ def score_ai_maturity(
     else:
         confidence = "low"
 
+    # ── Silent-company path ───────────────────────────────────────────────────
+    # When NO signal fired at all, score is 0 but this does NOT mean the company
+    # has low AI maturity. It means public evidence is absent. This branch is
+    # explicitly distinct from a company that scored 1 with weak-but-present signals.
+    if signal_count == 0:
+        justification.append(
+            "SILENT_COMPANY: No public AI signals detected across tech stack, "
+            "leadership hires, description text, NMF topic model, or industry labels. "
+            "Score 0 reflects absence of public evidence — it does NOT confirm low "
+            "AI maturity. The company may operate with a private GitHub org, unpublished "
+            "tooling, or minimal public presence (common in infra/data companies and "
+            "early-stage startups). Use ask-register language only; do not assert "
+            "low readiness."
+        )
+        # confidence stays "low" — the signal is genuinely absent, not just weak
+
     return score, confidence, justification
