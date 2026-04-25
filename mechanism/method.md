@@ -147,3 +147,118 @@ Run with each component enabled/disabled separately:
 | E   | OFF                 | OFF        | OFF       | Day-1 baseline    |
 
 Ablation results are saved to `ablation_results.json`.
+
+---
+
+## Statistical Test Plan
+
+This section specifies how to determine, with a pre-registered statistical test, whether the signal-grounded mechanism produces a meaningfully higher reply rate than generic template outreach. Every number below is fixed before the pilot starts and must not be adjusted post-hoc.
+
+### Primary Metric
+
+**Email reply rate** — the fraction of outbound touches that receive a non-auto-reply response within 7 calendar days of send.
+
+This is a binary outcome (replied / did not reply) per touch, making a two-sample proportion z-test the appropriate test.
+
+### Control and Treatment
+
+| Group | Description | Email content |
+|---|---|---|
+| **Control** | Generic template | Jinja2 template with no signal grounding; job-velocity ask register only |
+| **Treatment** | Signal-grounded (full mechanism) | LLM-generated opening anchored to funding / layoff / leadership / job-velocity signal; confidence-aware register |
+
+Both groups target the **same ICP segment** (Segment 1, recently-funded Series A/B). Prospects are assigned alternately (A/B split) to avoid temporal confounding.
+
+### Statistical Test
+
+**Test:** Two-sided two-sample proportion z-test (also known as a chi-squared test of independence for 2 × 2 contingency tables).
+
+Two-sided is used because we cannot rule out a situation where signal-grounded outreach performs worse (e.g., over-personalisation triggers spam filters).
+
+**Null hypothesis H₀:** p_treatment = p_control (signal-grounding does not change reply rate)
+
+**Alternative hypothesis H₁:** p_treatment ≠ p_control
+
+**Significance level:** α = 0.05
+
+**Minimum acceptable power:** 1 − β = 0.80
+
+### Effect Size Assumptions
+
+| Parameter | Value | Source |
+|---|---|---|
+| p_control (generic reply rate) | 0.02 (2%) | LeadIQ 2026; Apollo 2026 — `baseline_numbers.md` |
+| p_treatment (signal-grounded reply rate) | 0.08 (8%) | Clay 2025; Smartlead 2025 — `baseline_numbers.md` |
+| Minimum detectable effect (MDE) | δ = 0.06 (6 pp) | Difference between midpoints |
+
+### Sample Size Calculation
+
+Using the standard two-sample proportion formula:
+
+```
+n = ((z_{α/2} + z_β)² × (p_c(1−p_c) + p_t(1−p_t))) / (p_t − p_c)²
+
+Where:
+  z_{α/2} = 1.96   (two-sided α = 0.05)
+  z_β     = 0.842  (power = 0.80)
+  p_c     = 0.02
+  p_t     = 0.08
+
+n = ((1.96 + 0.842)² × (0.02×0.98 + 0.08×0.92)) / (0.08 − 0.02)²
+  = (2.802² × (0.0196 + 0.0736)) / 0.0036
+  = (7.851 × 0.0932) / 0.0036
+  = 0.7317 / 0.0036
+  ≈ 203 touches per group
+```
+
+**Required sample:** 203 touches per group × 2 = **406 total touches** to achieve 80% power at α = 0.05.
+
+### Pilot Power Disclosure
+
+The 30-day pilot is scoped at 60 touches/week × 4 weeks = **240 total touches** (120 per group in an A/B split). This is **underpowered** relative to the 406-touch requirement:
+
+- At n = 120 per group, the achieved power drops to approximately **55%** at the specified effect size.
+- This means a 45% probability of failing to detect a real difference even if one exists.
+- The pilot is therefore a **signal check**, not a statistically definitive test.
+- A full-power test requires extending to 7 weeks at 60 touches/week (420 total) or 4 weeks at 105 touches/week.
+
+This limitation is documented in `README.md` under Known Limitations.
+
+### Acceptance Criterion
+
+At the end of the pilot (or when 406 touches have been sent), compute:
+
+```python
+from scipy.stats import proportions_ztest
+import numpy as np
+
+# n_c: touches in control group
+# n_t: touches in treatment group
+# r_c: replies in control group
+# r_t: replies in treatment group
+
+count = np.array([r_t, r_c])
+nobs  = np.array([n_t, n_c])
+z_stat, p_value = proportions_ztest(count, nobs, alternative="two-sided")
+
+reject_null = p_value < 0.05
+```
+
+**Accept signal-grounded mechanism as superior if:** p_value < 0.05 AND the point estimate p_treatment > p_control.
+
+**Reject (or continue collecting data) if:** p_value ≥ 0.05.
+
+### Secondary Metrics
+
+The following are tracked but not subject to the primary hypothesis test (exploratory):
+
+| Metric | Measurement | Baseline |
+|---|---|---|
+| Stalled-thread rate | Threads with no stage advance in 14 days / total replied threads | 30–40% (Tenacious manual) |
+| Discovery-call booking rate | Booked calls / qualified leads | 40–55% (B2B services benchmark) |
+| Cost per qualified lead | Total LLM cost / qualified leads | Target: < $5.00 |
+| p50 / p95 agent response latency | From `data/act2_latency.json` | p50 = 9.23s, p95 = 23.57s |
+
+### Pre-Registration
+
+The test specification above (metrics, effect sizes, α, power, sample size, test statistic) is committed to git before the pilot begins. Post-hoc changes to the primary metric, significance threshold, or group definition are prohibited. Any deviation must be noted as a protocol amendment in a new commit with an explanatory message.
