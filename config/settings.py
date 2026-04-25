@@ -11,6 +11,7 @@ class Settings(BaseSettings):
 
     # ── LLM ──────────────────────────────────────────────────
     openrouter_api_key: str = Field("", env="OPENROUTER_API_KEY")
+    openrouter_api_keys: str = Field("", env="OPENROUTER_API_KEYS")
     anthropic_api_key: str = Field("", env="ANTHROPIC_API_KEY")
     llm_provider: str = Field("openrouter", env="LLM_PROVIDER")
     llm_model_dev: str = Field("deepseek/deepseek-chat", env="LLM_MODEL_DEV")

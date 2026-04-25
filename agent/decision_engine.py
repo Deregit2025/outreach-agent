@@ -15,7 +15,7 @@ MAX_EMAIL_TOUCHES = 2   # cold + 1 follow-up before pausing
 MAX_SMS_TOUCHES   = 3
 
 
-class Action(Enum):
+class Action(Enum):       
     SEND_COLD_EMAIL   = auto()
     SEND_FOLLOW_UP    = auto()
     ASK_NEXT_QUAL_Q   = auto()
@@ -85,13 +85,46 @@ def next_qualification_question(state: ConversationState) -> tuple[int, str]:
 
 def absorb_reply(state: ConversationState, reply_body: str) -> None:
     """
-    Heuristically extract qualification answers from a free-text reply.
-    Mutates state.qualification in-place. The LLM in agent.py does a more
-    nuanced extraction — this is the deterministic fallback.
+    Extract qualification answers from a free-text reply and update state.
+
+    Two passes:
+    1. Sentiment analysis — stores score on state, adjusts pace via next_action hint
+    2. Keyword heuristics — deterministic qualification answer extraction
+       (the LLM in agent.py does a more nuanced extraction on top of this)
     """
     text = reply_body.lower()
     q = state.qualification
 
+    # ── Pass 1: Sentiment ─────────────────────────────────────────────────────
+    try:
+        from agent.reply_sentiment import analyze_sentiment
+        from enrichment.evidence_graph import log_decision
+
+        sentiment_result = analyze_sentiment(reply_body)
+        state.reply_sentiment_score = sentiment_result["score"]
+        state.reply_sentiment_label = sentiment_result["sentiment"]
+        state.suggested_tone_shift = sentiment_result["suggested_tone_shift"]
+
+        log_decision(
+            prospect_id=state.prospect_id,
+            decision_type="sentiment_analysis",
+            inputs={"reply_length": len(reply_body), "stage": state.stage},
+            logic=(
+                f"Sentiment: {sentiment_result['sentiment']} "
+                f"(score={sentiment_result['score']:.2f}, "
+                f"confidence={sentiment_result['confidence']:.2f})"
+            ),
+            output={
+                "sentiment": sentiment_result["sentiment"],
+                "score": sentiment_result["score"],
+                "tone_shift": sentiment_result["suggested_tone_shift"],
+            },
+            decision=f"sentiment:{sentiment_result['sentiment']} → {sentiment_result['suggested_tone_shift']}",
+        )
+    except Exception:
+        pass  # sentiment is advisory; never block qualification extraction
+
+    # ── Pass 2: Keyword-based qualification answer extraction ─────────────────
     if q.q1_initiative is None:
         initiative_kw = [
             "building", "launching", "migrating", "rewriting", "scaling",

@@ -44,22 +44,34 @@ _jinja_env = Environment(
 # LLM helper
 # ---------------------------------------------------------------------------
 
-def _llm_call(messages: list[dict], model: str | None = None) -> str:
-    """
-    Call the LLM via LiteLLM and return the text content of the response.
-    Falls back gracefully if LiteLLM / API key not available.
-    """
+def _llm_call(
+    messages: list[dict],
+    model: str | None = None,
+    eval_mode: bool = False,
+) -> str:
+    """Call the LLM via LiteLLM. Uses OpenRouter for both dev and eval tiers."""
     try:
         import litellm  # type: ignore
-        provider = settings.llm_provider
-        resolved_model = model or (
-            f"ollama/{settings.llm_model_dev}" if provider == "ollama" else f"openrouter/{settings.llm_model_dev}"
-        )
+        import os
+
+        # Choose model tier: explicit override → eval tier → dev tier
+        if model:
+            resolved_model = model
+        elif eval_mode:
+            resolved_model = f"openrouter/{settings.llm_model_eval}"
+        else:
+            resolved_model = f"openrouter/{settings.llm_model_dev}"
+
+        # Inject OpenRouter key so LiteLLM can authenticate
+        api_key = settings.openrouter_api_key or os.getenv("OPENROUTER_API_KEY", "")
+
         response = litellm.completion(
             model=resolved_model,
             messages=messages,
             temperature=0.3,
             max_tokens=512,
+            api_key=api_key,
+            api_base="https://openrouter.ai/api/v1",
         )
         return response.choices[0].message.content or ""
     except Exception as exc:
@@ -401,10 +413,12 @@ def run(
 
     if action == Action.PAUSE:
         state.transition_to("paused")
-        router.crm.update_deal_stage(
-            contact_email=prospect.contact_email or "",
-            stage="closedlost",
-        )
+        _existing = router.crm.search_contact(prospect.contact_email or "")
+        if _existing:
+            router.crm.update_deal_stage(
+                contact_id=_existing["contact_id"],
+                stage="closedlost",
+            )
         return {"action": "PAUSE", "sent": False, "subject": "", "body": "",
                 "tone_report": {}, "bench_violations": [], "error": None}
 
@@ -475,22 +489,38 @@ def run(
         lead_stage=state.stage,
     )
 
+    _HS_STAGE_MAP: dict[str, str] = {
+        "new": "NEW",
+        "replied_by_email": "CONNECTED",
+        "warm_prefers_sms": "IN_PROGRESS",
+        "qualified": "OPEN_DEAL",
+        "booked": "OPEN_DEAL",
+        "paused": "BAD_TIMING",
+        "closed": "UNQUALIFIED",
+    }
+
     # Log to CRM
     try:
-        router.crm.upsert_contact({
-            "email": prospect.contact_email or "",
-            "firstname": prospect.contact_first_name or "",
-            "lastname": prospect.contact_last_name or "",
-            "company": prospect.company_name,
-            "jobtitle": prospect.contact_title or "",
-            "phone": prospect.contact_phone or "",
-        })
-        router.crm.log_email_activity(
-            contact_email=prospect.contact_email or "",
-            subject=subject,
-            body=body,
-            direction="OUTBOUND",
+        contact_email = prospect.contact_email or ""
+        crm_result = router.crm.upsert_contact(
+            email=contact_email,
+            properties={
+                "firstname": prospect.contact_first_name or "",
+                "lastname": prospect.contact_last_name or "",
+                "company": prospect.company_name,
+                "jobtitle": prospect.contact_title or "",
+                "phone": prospect.contact_phone or "",
+                "hs_lead_status": _HS_STAGE_MAP.get(state.stage, "NEW"),
+            },
         )
+        contact_id = crm_result.get("contact_id", "")
+        if contact_id:
+            router.crm.log_email_activity(
+                contact_id=contact_id,
+                subject=subject,
+                body=body,
+                direction="OUTBOUND",
+            )
     except Exception as exc:
         logger.warning("CRM update failed for %s: %s", prospect.company_name, exc)
 

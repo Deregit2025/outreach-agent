@@ -66,6 +66,11 @@ class ConversationState(BaseModel):
     escalated: bool = False
     escalation_reason: Optional[str] = None
 
+    # Sentiment tracking (populated by absorb_reply → reply_sentiment.py)
+    reply_sentiment_score: Optional[float] = None   # 0.0 negative → 1.0 positive
+    reply_sentiment_label: Optional[str] = None     # "positive" | "negative" | "neutral"
+    suggested_tone_shift: Optional[str] = None      # "accelerate" | "continue" | "hedge" | "objection_handling"
+
     def record_outbound(
         self,
         channel: str,

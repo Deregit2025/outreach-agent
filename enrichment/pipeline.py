@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import json
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
+
+logger = logging.getLogger(__name__)
 
 from enrichment.schemas.prospect import Prospect
 from enrichment.schemas.hiring_signal_brief import HiringSignalBrief, SignalItem
@@ -21,6 +24,7 @@ from enrichment.layoffs_lookup import check_layoff
 from enrichment.ai_maturity_scorer import score_ai_maturity
 from enrichment.icp_classifier import classify_segment
 from enrichment.competitor_finder import find_peers, build_competitor_gap_brief
+from enrichment.evidence_graph import log_decision
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 BRIEFS_DIR = PROJECT_ROOT / "data" / "processed" / "hiring_signal_briefs"
@@ -144,6 +148,9 @@ def _ai_maturity_signal(score: int, confidence: str, justification: list[str]) -
 def enrich_prospect(
     company_name: str,
     prospect_id: str | None = None,
+    wellfound_slug: str | None = None,
+    builtin_slug: str | None = None,
+    website_override: str | None = None,
 ) -> tuple[Prospect, HiringSignalBrief, CompetitorGapBrief]:
     if prospect_id is None:
         prospect_id = str(uuid4())[:8]
@@ -187,15 +194,76 @@ def enrich_prospect(
     # Step 2: Layoffs.fyi lookup → layoff signal
     fyi_row = check_layoff(company_name)
 
-    # Step 3: Score AI maturity
+    # Step 3a: Build combined company text for NLP modules
+    full_description = str(row.get("full_description", "") or "") if row else ""
+    tech_highlights_raw = str(row.get("technology_highlights", "") or "") if row else ""
+
+    # Step 3b: Score AI maturity (now uses TF-IDF + topic signals internally)
     ai_score, ai_confidence, ai_justification = score_ai_maturity(
         tech_stack=prospect.tech_stack,
         leadership_hires=prospect.leadership_hires,
         industries=prospect.industries,
         description=prospect.description or "",
+        full_description=full_description,
+        technology_highlights_raw=tech_highlights_raw,
     )
     prospect.ai_maturity_score = ai_score
     prospect.ai_maturity_confidence = ai_confidence
+
+    log_decision(
+        prospect_id=prospect_id,
+        decision_type="ai_maturity",
+        inputs={
+            "tech_stack": [t.name for t in prospect.tech_stack[:5]],
+            "leadership_hires": [h.label for h in prospect.leadership_hires[:3]],
+            "industries": prospect.industries[:3],
+            "description_length": len(prospect.description or ""),
+            "full_description_length": len(full_description),
+        },
+        logic=(
+            f"AI maturity scored {ai_score}/3 with {ai_confidence} confidence "
+            f"from {len(ai_justification)} signals"
+        ),
+        output={"score": ai_score, "confidence": ai_confidence, "justifications": ai_justification},
+        decision=f"ai_maturity:{ai_score} ({ai_confidence})",
+    )
+
+    # Step 3c: Job velocity — scrape public job posts
+    # Use explicit overrides if provided, otherwise derive from Crunchbase website
+    if website_override and not prospect.website:
+        prospect.website = website_override
+    job_velocity_sig: SignalItem | None = None
+    try:
+        from scraper.job_scraper import get_job_velocity_signal
+        website = prospect.website or ""
+        careers_url = (website.rstrip("/") + "/careers") if website else None
+        jv = get_job_velocity_signal(
+            company_name=company_name,
+            wellfound_slug=wellfound_slug,
+            builtin_slug=builtin_slug,
+            careers_url=careers_url,
+        )
+        if jv:
+            job_velocity_sig = SignalItem(
+                signal_type=jv["signal_type"],
+                value=jv["value"],
+                evidence=jv["evidence"],
+                confidence=jv["confidence"],
+                language_register=jv["language_register"],
+            )
+            log_decision(
+                prospect_id=prospect_id,
+                decision_type="job_velocity",
+                inputs={"company_name": company_name, "careers_url": careers_url},
+                logic=(
+                    f"Job scrape: {jv.get('engineering_role_count', 0)} engineering roles, "
+                    f"delta={jv.get('role_delta_60d', 0)}"
+                ),
+                output=jv,
+                decision=f"job_velocity:{jv['value']}",
+            )
+    except Exception as _jv_exc:
+        logger.debug("Job velocity scrape skipped: %s", _jv_exc)
 
     # Step 4: Build signals
     funding_sig = _funding_signal(prospect)
@@ -213,6 +281,7 @@ def enrich_prospect(
         company_name=prospect.company_name,
         generated_at=now_iso,
         funding=funding_sig,
+        job_velocity=job_velocity_sig,
         leadership_change=leadership_sig,
         layoff=layoff_sig,
         tech_stack=tech_sig,
@@ -223,6 +292,22 @@ def enrich_prospect(
     segment, seg_confidence = classify_segment(prospect, partial_brief)
     prospect.icp_segment = segment if segment != 0 else None
     prospect.icp_confidence = seg_confidence if seg_confidence != "abstain" else None
+
+    log_decision(
+        prospect_id=prospect_id,
+        decision_type="segment_classification",
+        inputs={
+            "funding_age_days": partial_brief.funding.data_age_days if partial_brief.funding else None,
+            "layoff_age_days": partial_brief.layoff.data_age_days if partial_brief.layoff else None,
+            "leadership_age_days": partial_brief.leadership_change.data_age_days if partial_brief.leadership_change else None,
+            "ai_maturity_score": ai_score,
+            "employee_count_min": prospect.employee_count_min,
+            "employee_count_max": prospect.employee_count_max,
+        },
+        logic=f"Segment {segment} selected with confidence '{seg_confidence}' per ICP priority rules",
+        output={"segment": segment, "confidence": seg_confidence},
+        decision=f"segment:{segment} ({seg_confidence})",
+    )
 
     pitch_language = "high_readiness" if ai_score >= 2 else "low_readiness"
 
@@ -235,6 +320,7 @@ def enrich_prospect(
         company_name=prospect.company_name,
         generated_at=now_iso,
         funding=funding_sig,
+        job_velocity=job_velocity_sig,
         leadership_change=leadership_sig,
         layoff=layoff_sig,
         tech_stack=tech_sig,

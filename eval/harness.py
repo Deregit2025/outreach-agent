@@ -45,6 +45,51 @@ try:
 except ImportError:
     pass
 
+# ── OpenRouter key pool (round-robin + permanent retirement) ──────────────────
+# Load all keys: OPENROUTER_API_KEYS (comma-separated) + OPENROUTER_API_KEY
+_keys_multi = [k.strip() for k in os.getenv("OPENROUTER_API_KEYS", "").split(",") if k.strip()]
+_key_single = os.getenv("OPENROUTER_API_KEY", "").strip()
+OR_KEYS: list[str] = _keys_multi + ([_key_single] if _key_single and _key_single not in _keys_multi else [])
+_exhausted: set[int] = set()   # indices of keys permanently retired (weekly limit hit)
+_rr_cursor: int = 0            # round-robin cursor across all keys
+
+def _active_count() -> int:
+    return len(OR_KEYS) - len(_exhausted)
+
+def _pick_rr_key() -> tuple[int, str] | tuple[None, None]:
+    """Round-robin: advance cursor, skip exhausted keys, set env var."""
+    global _rr_cursor
+    n = len(OR_KEYS)
+    for _ in range(n):
+        idx = _rr_cursor % n
+        _rr_cursor += 1
+        if idx not in _exhausted:
+            os.environ["OPENROUTER_API_KEY"] = OR_KEYS[idx]
+            return idx, OR_KEYS[idx]
+    return None, None  # all keys exhausted
+
+def _retire_and_failover(failed_idx: int) -> tuple[int, str] | tuple[None, None]:
+    """Permanently retire a key that hit its weekly limit, failover to next."""
+    _exhausted.add(failed_idx)
+    remaining = _active_count()
+    print(f"\n  [key-pool] key {failed_idx + 1} weekly limit — retired forever  "
+          f"({remaining} key(s) still active)", flush=True)
+    n = len(OR_KEYS)
+    for i in range(1, n):
+        idx = (failed_idx + i) % n
+        if idx not in _exhausted:
+            os.environ["OPENROUTER_API_KEY"] = OR_KEYS[idx]
+            print(f"  [key-pool] failover → key {idx + 1}", flush=True)
+            return idx, OR_KEYS[idx]
+    print("  [key-pool] ALL keys exhausted — no more retries", flush=True)
+    return None, None
+
+if OR_KEYS:
+    os.environ["OPENROUTER_API_KEY"] = OR_KEYS[0]
+    os.environ.setdefault("OR_SITE_URL", "https://gettenacious.com")
+    os.environ.setdefault("OR_APP_NAME", "TenaciousConversionEngine")
+    print(f"[key-pool] loaded {len(OR_KEYS)} key(s) for round-robin rotation")
+
 # ── Langfuse (optional) ───────────────────────────────────────────────────────
 try:
     from langfuse import Langfuse
@@ -165,8 +210,8 @@ def run_baseline(
         domain="retail",
         llm_agent=agent_model,
         llm_user=user_model,
-        llm_args_agent={"temperature": 0.0},
-        llm_args_user={"temperature": 0.7},
+        llm_args_agent={"temperature": 0.0, "max_tokens": 4096},
+        llm_args_user={"temperature": 0.7, "max_tokens": 4096},
     )
 
     tasks = get_tasks("retail", task_ids=task_ids)
@@ -182,20 +227,43 @@ def run_baseline(
 
         for trial in range(trials):
             seed = 42 + trial * 1000
-            t0 = time.time()
-            try:
-                sim = run_single_task(
-                    config,
-                    task,
-                    seed=seed,
-                    evaluation_type=EvaluationType.ALL,
-                )
-                reward = float(sim.reward_info.reward) if sim.reward_info else 0.0
-                duration = sim.duration if sim.duration else (time.time() - t0)
-                agent_cost = sim.agent_cost or 0.0
-            except Exception as e:
-                print(f"\n    [trial {trial}] ERROR: {e}", flush=True)
-                reward, duration, agent_cost = 0.0, time.time() - t0, 0.0
+            reward, duration, agent_cost = 0.0, 0.0, 0.0
+
+            # Round-robin: pick next active key for this simulation
+            cur_idx, _ = _pick_rr_key()
+            if cur_idx is None:
+                print(f"\n  [key-pool] all keys exhausted — skipping trial {trial}", flush=True)
+                task_rewards[task.id].append(0.0)
+                all_durations.append(0.0)
+                continue
+
+            print(f" [k{cur_idx + 1}]", end="", flush=True)
+
+            # Retry loop: on 403, retire key and failover to next
+            while True:
+                t0 = time.time()
+                try:
+                    sim = run_single_task(
+                        config,
+                        task,
+                        seed=seed,
+                        evaluation_type=EvaluationType.ALL,
+                    )
+                    reward = float(sim.reward_info.reward) if sim.reward_info else 0.0
+                    duration = sim.duration if sim.duration else (time.time() - t0)
+                    agent_cost = sim.agent_cost or 0.0
+                    break
+                except Exception as e:
+                    err = str(e)
+                    is_key_limit = ("403" in err and "weekly" in err.lower()) or "Key limit exceeded" in err
+                    if is_key_limit:
+                        cur_idx, _ = _retire_and_failover(cur_idx)
+                        if cur_idx is not None:
+                            print(f" [k{cur_idx + 1}]", end="", flush=True)
+                            continue
+                    print(f"\n    [trial {trial}] ERROR: {e}", flush=True)
+                    reward, duration, agent_cost = 0.0, time.time() - t0, 0.0
+                    break
 
             total_agent_cost += agent_cost
             all_durations.append(duration)
@@ -307,9 +375,9 @@ def _parse_args() -> argparse.Namespace:
     p.add_argument("--mode", choices=["dev", "held_out"], default="dev")
     p.add_argument("--trials", type=int, default=5,
                    help="Trials per task for pass@k (default: 5)")
-    p.add_argument("--agent-model", default="ollama/minimax-m2.7:cloud",
-                   help="LiteLLM model string for agent")
-    p.add_argument("--user-model", default="ollama/minimax-m2.7:cloud",
+    p.add_argument("--agent-model", default="openrouter/deepseek/deepseek-chat",
+                   help="LiteLLM model string for agent (dev default: openrouter/deepseek/deepseek-chat, eval: openrouter/anthropic/claude-sonnet-4-6)")
+    p.add_argument("--user-model", default="openrouter/deepseek/deepseek-chat",
                    help="LiteLLM model string for user simulator")
     p.add_argument("--run-name", default=None,
                    help="Label for this run (auto-generated if omitted)")

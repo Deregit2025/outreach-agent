@@ -40,7 +40,7 @@ class CalendarHandler:
         self._base_url: str = settings.calcom_base_url.rstrip("/")
         self._api_key: str = settings.calcom_api_key
         self._default_event_type_id: str = settings.calcom_event_type_id
-
+  
     @property
     def _headers(self) -> dict[str, str]:
         return {

@@ -90,10 +90,52 @@ def _load_icp_definitions() -> Dict[str, Any]:
         segments[segment_num] = {
             "name": segment_name,
             "qualifying_filters": qualifying,
-            "disqualifying_filters": []  # Would need more parsing for disqualifiers
+            "disqualifying_filters": []
         }
-    
-    return segments
+
+    if segments:
+        return segments
+
+    # Markdown parsing produced no segments — fall through to hardcoded fallback
+    return {
+        1: {
+            "name": "Recently-funded Series A/B startups",
+            "qualifying_filters": {
+                "funding_amount_min": 5000000,
+                "funding_amount_max": 30000000,
+                "funding_age_days_max": 180,
+                "headcount_min": 15,
+                "headcount_max": 80,
+                "open_roles_min": 5,
+            },
+            "disqualifying_filters": ["corporate_investor", "anti_offshore", "competitor_client", "recent_layoff"],
+        },
+        2: {
+            "name": "Mid-market platforms restructuring cost",
+            "qualifying_filters": {
+                "headcount_min": 200,
+                "headcount_max": 2000,
+                "layoff_age_days_max": 120,
+            },
+            "disqualifying_filters": ["layoff_percentage_high", "bankruptcy", "complex_regulation"],
+        },
+        3: {
+            "name": "Engineering-leadership transitions",
+            "qualifying_filters": {
+                "leadership_age_days_max": 90,
+                "headcount_min": 50,
+                "headcount_max": 500,
+            },
+            "disqualifying_filters": ["interim_leader", "in_house_bias", "existing_vendor"],
+        },
+        4: {
+            "name": "Specialized capability gaps",
+            "qualifying_filters": {
+                "ai_maturity_min": 2,
+            },
+            "disqualifying_filters": ["ai_maturity_low", "capability_not_on_bench", "specialist_boutique"],
+        },
+    }
 
 
 _ICP_DEFINITIONS = _load_icp_definitions()
